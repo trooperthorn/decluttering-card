@@ -46,21 +46,18 @@ repo's status against it honestly - including where it's short.
 
 ## Platinum (aspirational, not required)
 
-- [~] Visual regression testing - started, not finished. `playwright.config.ts` +
+- [x] Visual regression testing, scoped: `playwright.config.ts` +
       `e2e/for-each-views.spec.ts` cover the parts of this card's rendering
       that are entirely self-contained (the `for_each` debug view and the
       empty-state message) - the parts that don't depend on Home Assistant's
       own internal components (`state-badge`, `ha-form`, etc.), which aren't
       available outside a running HA frontend, so a full end-to-end
       screenshot of a real instantiated template isn't achievable
-      standalone. Could not be run or verified locally in the environment
-      this was built in (no network access to Playwright's browser CDN);
-      `npx playwright test --list` did confirm the config and test file are
-      syntactically valid. The `visual-regression.yml` CI workflow's
-      comparison step runs with `continue-on-error: true` until baseline
-      screenshots are actually seeded - run it once with
-      `workflow_dispatch` and `update_snapshots: true` to generate and
-      commit them, then remove `continue-on-error` so it becomes a real gate.
+      standalone. Baselines seeded and verified passing for real in CI
+      2026-09-07 (not run locally - the sandboxed environment this was built
+      in has no network access to Playwright's browser CDN, but
+      `npx playwright test --list` confirmed the config and test file were
+      syntactically valid before the first CI run proved the rest).
 - [ ] Live-verified against a real HA instance, not just unit-tested (the
       registry entry field names `for_each` depends on - `entity_id`,
       `device_id`, `area_id`, `labels`, `floor_id` - are long-stable HA

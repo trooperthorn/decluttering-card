@@ -48,17 +48,11 @@ jobs:
 
       # Not run as part of the update pass above (there's nothing to compare
       # a freshly-generated baseline against). Runs otherwise, comparing
-      # against whatever baselines are already committed.
-      #
-      # continue-on-error until baselines are actually seeded (this workflow
-      # has never been run with update_snapshots yet) - the first real run
-      # without a baseline would otherwise fail every PR on a check that was
-      # never meant to gate anything until it has something real to compare
-      # against. Remove continue-on-error once e2e/__screenshots__ has real
-      # baseline images committed.
+      # against the baselines committed in e2e/__screenshots__ - seeded
+      # 2026-09-07 and confirmed passing for real (not just continue-on-error
+      # masking a failure) before this became a blocking gate.
       - name: Compare against baseline screenshots
         if: "!(github.event_name == 'workflow_dispatch' && inputs.update_snapshots)"
-        continue-on-error: true
         run: npm run test:visual
       - name: Upload diff report on failure
         if: failure()
