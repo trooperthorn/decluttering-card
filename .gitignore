@@ -2,3 +2,5 @@
 yarn.lock
 .rpt2_cache/
 /dist/**
+/playwright-report/
+/test-results/
