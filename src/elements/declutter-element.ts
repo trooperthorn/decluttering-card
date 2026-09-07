@@ -1,10 +1,10 @@
 import { LitElement, html, TemplateResult, css, CSSResult } from 'lit';
 import { state } from 'lit/decorators.js';
-import { HomeAssistant, createThing, LovelaceCard } from 'custom-card-helpers';
+import { HomeAssistant, LovelaceCard } from 'custom-card-helpers';
 import { TemplateConfig, VariablesConfig, LovelaceThing, LovelaceThingConfig, LovelaceThingType } from '../types';
 import deepReplace from '../template-engine';
 import { getThingType } from '../templates-registry';
-import { HELPERS } from '../card-helpers';
+import { createLovelaceThing } from '../thing-factory';
 
 export abstract class DeclutteringElement extends LitElement {
   @state() protected _hass?: HomeAssistant;
@@ -52,7 +52,7 @@ export abstract class DeclutteringElement extends LitElement {
 
     this._thingConfig = thingConfig;
     this._thingType = thingType;
-    DeclutteringElement._createThing(thingConfig, thingType, (thing: LovelaceThing) => {
+    createLovelaceThing(thingConfig, thingType, (thing: LovelaceThing) => {
       if (this._thingConfig === thingConfig) {
         this._setThing(thing, thingType === 'element' ? thingConfig.style : undefined);
       }
@@ -83,41 +83,6 @@ export abstract class DeclutteringElement extends LitElement {
     if (!this._hass || !this._thing) return html``;
 
     return html` ${this._thing} `;
-  }
-
-  private static async _createThing(
-    thingConfig: LovelaceThingConfig,
-    thingType: LovelaceThingType,
-    handler: (thing: LovelaceThing) => void,
-  ): Promise<void> {
-    let thing: LovelaceThing;
-    if (HELPERS) {
-      if (thingType === 'card') {
-        if (thingConfig.type === 'divider') thing = (await HELPERS).createRowElement(thingConfig);
-        else thing = (await HELPERS).createCardElement(thingConfig);
-      } else if (thingType === 'row') {
-        thing = (await HELPERS).createRowElement(thingConfig);
-      } else if (thingType === 'element') {
-        thing = (await HELPERS).createHuiElement(thingConfig);
-      } else {
-        throw new Error(`Unsupported thing type '${thingType}'`);
-      }
-    } else {
-      thing = createThing(thingConfig, thingType === 'row');
-    }
-    thing.addEventListener(
-      'll-rebuild',
-      (ev) => {
-        ev.stopPropagation();
-        DeclutteringElement._createThing(thingConfig, thingType, (newThing: LovelaceThing) => {
-          thing.replaceWith(newThing);
-          handler(newThing);
-        });
-      },
-      { once: true },
-    );
-    thing.id = 'declutter-child';
-    handler(thing);
   }
 
   // for LovelaceCard
