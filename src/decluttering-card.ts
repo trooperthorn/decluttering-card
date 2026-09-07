@@ -1,4 +1,5 @@
-import { LitElement, html, customElement, property, state, TemplateResult, css, CSSResult } from 'lit-element';
+import { LitElement, html, TemplateResult, css, CSSResult } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import {
   HomeAssistant,
   createThing,
@@ -18,8 +19,10 @@ import {
 } from './types';
 import deepReplace from './deep-replace';
 import { getLovelaceConfig } from './utils';
-import { ResizeObserver } from 'resize-observer';
 import * as pjson from '../package.json';
+
+// ResizeObserver is a standard DOM API (Baseline since 2020); the `resize-observer`
+// polyfill this used to depend on is no longer needed for any browser HA still supports.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const HELPERS = (window as any).loadCardHelpers ? (window as any).loadCardHelpers() : undefined;
@@ -125,7 +128,7 @@ function getTemplates(ll: LovelaceConfig): Record<string, TemplateConfig> {
 }
 
 function getThingType(templateConfig: TemplateConfig): LovelaceThingType | undefined {
-  const thingTypes = Object.keys(templateConfig).filter(key => ['card', 'row', 'element'].includes(key));
+  const thingTypes = Object.keys(templateConfig).filter((key) => ['card', 'row', 'element'].includes(key));
   return thingTypes.length === 1 ? (thingTypes[0] as LovelaceThingType) : undefined;
 }
 
@@ -188,7 +191,7 @@ abstract class DeclutteringElement extends LitElement {
 
     if (style) {
       this._savedStyles = new Map();
-      Object.keys(style).forEach(prop => {
+      Object.keys(style).forEach((prop) => {
         this._savedStyles?.set(prop, [this.style.getPropertyValue(prop), this.style.getPropertyPriority(prop)]);
         this.style.setProperty(prop, style[prop]);
       });
@@ -205,9 +208,7 @@ abstract class DeclutteringElement extends LitElement {
   protected render(): TemplateResult | void {
     if (!this._hass || !this._thing) return html``;
 
-    return html`
-      ${this._thing}
-    `;
+    return html` ${this._thing} `;
   }
 
   private static async _createThing(
@@ -232,7 +233,7 @@ abstract class DeclutteringElement extends LitElement {
     }
     thing.addEventListener(
       'll-rebuild',
-      ev => {
+      (ev) => {
         ev.stopPropagation();
         DeclutteringElement._createThing(thingConfig, thingType, (newThing: LovelaceThing) => {
           thing.replaceWith(newThing);
@@ -546,49 +547,50 @@ class DeclutteringTemplateEditor extends LitElement implements LovelaceCardEdito
           @iron-activate=${this._activateTab}
         >
           <paper-tab name="settings">Settings</paper-tab>
-          ${data.thingType === 'card'
-            ? html`
-                <paper-tab name="card">Card</paper-tab>
-                <paper-tab name="change_card">Change Card Type</paper-tab>
-              `
-            : data.thingType === 'row'
-            ? html`
-                <paper-tab name="row">Row</paper-tab>
-              `
-            : html``}
+          ${
+            data.thingType === 'card'
+              ? html`
+                  <paper-tab name="card">Card</paper-tab>
+                  <paper-tab name="change_card">Change Card Type</paper-tab>
+                `
+              : data.thingType === 'row'
+                ? html` <paper-tab name="row">Row</paper-tab> `
+                : html``
+          }
         </paper-tabs>
       </div>
-      ${this._selectedTab === 'settings'
-        ? html`
-            <ha-form
-              .hass=${this.hass}
-              .data=${data}
-              .schema=${DeclutteringTemplateEditor.schema}
-              .error=${error}
-              .computeLabel=${(s): string => s.label ?? s.name}
-              .computeHelper=${(s): string => s.helper ?? ''}
-              @value-changed=${this._valueChanged}
-            ></ha-form>
-          `
-        : this._selectedTab === 'card'
-        ? html`
-            <hui-card-element-editor
-              .hass=${this.hass}
-              .lovelace=${this.lovelace}
-              .value=${this._config.card}
-              @config-changed=${this._cardChanged}
-            ></hui-card-element-editor>
-          `
-        : this._selectedTab === 'change_card'
-        ? html`
-            <hui-card-picker
-              .hass=${this.hass}
-              .lovelace=${this.lovelace}
-              @config-changed=${this._cardPicked}
-            ></hui-card-picker>
-          `
-        : this._selectedTab === 'row'
-        ? html`
+      ${
+        this._selectedTab === 'settings'
+          ? html`
+              <ha-form
+                .hass=${this.hass}
+                .data=${data}
+                .schema=${DeclutteringTemplateEditor.schema}
+                .error=${error}
+                .computeLabel=${(s): string => s.label ?? s.name}
+                .computeHelper=${(s): string => s.helper ?? ''}
+                @value-changed=${this._valueChanged}
+              ></ha-form>
+            `
+          : this._selectedTab === 'card'
+            ? html`
+                <hui-card-element-editor
+                  .hass=${this.hass}
+                  .lovelace=${this.lovelace}
+                  .value=${this._config.card}
+                  @config-changed=${this._cardChanged}
+                ></hui-card-element-editor>
+              `
+            : this._selectedTab === 'change_card'
+              ? html`
+                  <hui-card-picker
+                    .hass=${this.hass}
+                    .lovelace=${this.lovelace}
+                    @config-changed=${this._cardPicked}
+                  ></hui-card-picker>
+                `
+              : this._selectedTab === 'row'
+                ? html`
             <hui-row-element-editor
               .hass=${this.hass}
               .lovelace=${this.lovelace}
@@ -596,7 +598,8 @@ class DeclutteringTemplateEditor extends LitElement implements LovelaceCardEdito
               @config-changed=${this._rowChanged}
             ></hui-card-element-editor>
           `
-        : html``}
+                : html``
+      }
     `;
   }
 

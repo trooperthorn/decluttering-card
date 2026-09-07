@@ -22,9 +22,10 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
+    "useDefineForClassFields": false,
     "sourceMap": true,
   },
   "include": [
-    "src/*"
+    "src/**/*"
   ]
 }
