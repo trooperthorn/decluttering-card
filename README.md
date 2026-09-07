@@ -277,6 +277,54 @@ Registry data is fetched once per dashboard page load and cached for the
 session (the same tradeoff `auto-entities` makes) - an entity moved to a
 different area won't be picked up by `for_each` until you reload.
 
+### Composing templates: one template referencing another
+
+A template's `card`/`row`/`element` content can itself contain a
+`custom:decluttering-card` reference to a *different* template. A value a
+parent template resolves - from its own `variables:`, `default`s, or (for a
+`for_each` card) the auto-bound `[[entity]]`/`[[name]]`/`[[area]]` - flows
+straight into that nested reference's own `variables:` list as a plain
+literal, because substitution runs over the whole card configuration before
+Home Assistant ever creates the nested card as its own separate element.
+Nothing extra is needed to make this work.
+
+```yaml
+decluttering_templates:
+  room_status:
+    card:
+      type: vertical-stack
+      cards:
+        - type: custom:decluttering-card
+          template: safety_badge
+          variables:
+            - room: '[[room_name]]'
+        - type: custom:decluttering-card
+          template: climate_badge
+          variables:
+            - room: '[[room_name]]'
+  safety_badge:
+    row:
+      type: button
+      name: '[[room|Unnamed Room]] - Safety'
+  climate_badge:
+    row:
+      type: button
+      name: '[[room|Unnamed Room]] - Climate'
+```
+
+```yaml
+type: custom:decluttering-card
+template: room_status
+variables:
+  - room_name: Kitchen
+```
+
+A template that ends up referencing itself - directly, or through a chain of
+other templates (`room_status` embeds `safety_badge`, which embeds
+`room_status` again) - throws a clear error instead of recursing forever,
+since each nested reference mounts as a genuinely separate card with no
+natural call stack to detect that with otherwise.
+
 ### Using the card
 
 If your template content is a card, add a *Custom: Decluttering card* to your dashboard
