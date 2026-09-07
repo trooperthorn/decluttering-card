@@ -273,9 +273,15 @@ together):
   entity id and its resolved variables - useful for checking a selector
   actually matches what you expect before wiring up the real template.
 
-Registry data is fetched once per dashboard page load and cached for the
-session (the same tradeoff `auto-entities` makes) - an entity moved to a
-different area won't be picked up by `for_each` until you reload.
+Registry data is cached for the page session, but the cache updates live:
+this listens for Home Assistant's own `entity_registry_updated`,
+`device_registry_updated`, `area_registry_updated`, and
+`label_registry_updated` events and refreshes only the affected part of the
+cache when one fires. An entity moved to a different area, relabeled, or
+newly assigned shows up in a `for_each` selector without reloading the
+page - built for always-on displays that may not be reloaded for weeks at a
+time. (There's no `floor_registry_updated` event; a floor's contents change
+via `area_registry_updated` instead, which is already covered.)
 
 ### Composing templates: one template referencing another
 

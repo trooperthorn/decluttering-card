@@ -9,9 +9,13 @@ import { HomeAssistant } from 'custom-card-helpers';
 // the newer Lit-context system, which isn't published anywhere a HACS card
 // can actually import it from.
 //
-// Cached per page session, same tradeoff auto-entities makes: an entity
-// moved to a different area mid-session won't be picked up by `for_each`
-// until the dashboard reloads.
+// Cached per page session, same starting point as auto-entities - but this
+// runs on always-on kiosk displays that may never reload for weeks, where
+// "wait for a reload" isn't acceptable: an entity added to an area, or
+// relabeled, has to show up in a for_each selector without anyone touching
+// the display. subscribeToRegistryChanges() below listens for HA's own
+// registry-updated events and invalidates just the affected cache slice,
+// so the next resolution picks up fresh data - no polling, no reload.
 
 export interface EntityRegistryEntry {
   entity_id: string;
@@ -56,12 +60,50 @@ interface RegistryCache {
   areas?: Promise<Record<string, AreaRegistryEntry>>;
   labels?: Promise<Record<string, LabelRegistryEntry>>;
   floors?: Promise<Record<string, FloorRegistryEntry>>;
+  // Bumped every time any registry-updated event fires. A for_each card
+  // compares this against the generation it last resolved against (see
+  // cards/decluttering-card.ts) to decide whether to re-resolve - cheap to
+  // check on every hass update, no polling needed.
+  generation: number;
+  subscribed?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const w = window as any;
-w.declutteringCard_registryCache = w.declutteringCard_registryCache || ({} as RegistryCache);
+w.declutteringCard_registryCache = w.declutteringCard_registryCache || ({ generation: 0 } as RegistryCache);
 const cache: RegistryCache = w.declutteringCard_registryCache;
+
+export function getRegistryGeneration(): number {
+  return cache.generation;
+}
+
+type CacheableSlice = 'entities' | 'devices' | 'areas' | 'labels';
+
+const REGISTRY_EVENTS: { event: string; slice: CacheableSlice }[] = [
+  { event: 'entity_registry_updated', slice: 'entities' },
+  { event: 'device_registry_updated', slice: 'devices' },
+  { event: 'area_registry_updated', slice: 'areas' },
+  { event: 'label_registry_updated', slice: 'labels' },
+  // No floor_registry_updated event is documented; floors change rarely
+  // enough (and area_registry_updated already fires when an area's floor_id
+  // changes) that this is an acceptable gap rather than something to poll for.
+];
+
+// Idempotent and safe to call on every hass update - only subscribes once
+// per page, matching the singleton-cache pattern above. Subscriptions are
+// deliberately never torn down: the cache and its subscriptions are meant
+// to outlive any single card instance for the life of the page, exactly
+// like the cache itself already does.
+export function subscribeToRegistryChanges(hass: HomeAssistant): void {
+  if (cache.subscribed) return;
+  cache.subscribed = true;
+  for (const { event, slice } of REGISTRY_EVENTS) {
+    hass.connection.subscribeEvents(() => {
+      delete cache[slice];
+      cache.generation += 1;
+    }, event);
+  }
+}
 
 function listByKey<T>(hass: HomeAssistant, registryType: string, keyField: keyof T): Promise<Record<string, T>> {
   return hass.callWS<T[]>({ type: `config/${registryType}_registry/list` }).then((items) =>
