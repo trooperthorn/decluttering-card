@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import deepReplace from '../src/deep-replace';
+import deepReplace from '../src/template-engine';
 
 // Characterization tests written before any behavior change (Phase 0 of the
 // rework) so later phases can prove the defaults/merge fix actually changed
