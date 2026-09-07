@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { DeclutteringTemplateConfig } from '../types';
 import { DeclutteringElement } from '../elements/declutter-element';
 import { registerCustomCard } from '../register-custom-card';
+import { extractInheritedChain } from '../template-chain';
 
 registerCustomCard({
   type: 'decluttering-template',
@@ -50,7 +51,7 @@ export class DeclutteringTemplate extends DeclutteringElement {
       throw new Error('Missing template property');
     }
     this._template = config.template;
-    this._setTemplateConfig(config, undefined);
+    this._setTemplateConfig(config.template, config, undefined, extractInheritedChain(config));
   }
 
   protected render(): TemplateResult | void {

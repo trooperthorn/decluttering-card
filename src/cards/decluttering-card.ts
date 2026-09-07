@@ -9,6 +9,7 @@ import { registerCustomCard } from '../register-custom-card';
 import { resolveForEach, ForEachMatch } from '../for-each';
 import { createLovelaceThing } from '../thing-factory';
 import deepReplace from '../template-engine';
+import { assertNoRecursion, extractInheritedChain, threadChainIntoNestedReference } from '../template-chain';
 
 registerCustomCard({
   type: 'decluttering-card',
@@ -128,7 +129,7 @@ export class DeclutteringCard extends DeclutteringElement {
         `The template "${config.template}" doesn't exist in decluttering_templates or in a custom:decluttering-template card`,
       );
     }
-    this._setTemplateConfig(templateConfig, config.variables);
+    this._setTemplateConfig(config.template, templateConfig, config.variables, extractInheritedChain(config));
   }
 
   set hass(hass: HomeAssistant) {
@@ -163,6 +164,9 @@ export class DeclutteringCard extends DeclutteringElement {
     if (!thingType) {
       throw new Error('You must define one card, element, or row in the template');
     }
+    const inheritedChain = extractInheritedChain(config);
+    assertNoRecursion(inheritedChain, config.template);
+    const chain = [...inheritedChain, config.template];
 
     const matches: ForEachMatch[] = await resolveForEach(hass, forEachConfig);
     if (token !== this._forEachResolveToken) return;
@@ -187,6 +191,7 @@ export class DeclutteringCard extends DeclutteringElement {
           new Promise<void>((resolve) => {
             const mergedVariables = [...match.variables, ...(config.variables ?? [])];
             const thingConfig = deepReplace(mergedVariables, templateConfig);
+            threadChainIntoNestedReference(thingConfig, chain);
             createLovelaceThing(thingConfig, thingType, (thing) => {
               thing.hass = hass;
               created[index] = { thing, entityId: match.context.entityId, groupLabel: match.groupLabel };

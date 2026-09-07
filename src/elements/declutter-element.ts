@@ -5,6 +5,7 @@ import { TemplateConfig, VariablesConfig, LovelaceThing, LovelaceThingConfig, Lo
 import deepReplace from '../template-engine';
 import { getThingType } from '../templates-registry';
 import { createLovelaceThing } from '../thing-factory';
+import { assertNoRecursion, threadChainIntoNestedReference } from '../template-chain';
 
 export abstract class DeclutteringElement extends LitElement {
   @state() protected _hass?: HomeAssistant;
@@ -43,12 +44,25 @@ export abstract class DeclutteringElement extends LitElement {
     }
   }
 
-  protected _setTemplateConfig(templateConfig: TemplateConfig, variables: VariablesConfig[] | undefined): void {
+  protected _setTemplateConfig(
+    templateName: string,
+    templateConfig: TemplateConfig,
+    variables: VariablesConfig[] | undefined,
+    inheritedChain: string[] = [],
+  ): void {
+    assertNoRecursion(inheritedChain, templateName);
+    const chain = [...inheritedChain, templateName];
+
     const thingType = getThingType(templateConfig);
     if (!thingType) {
       throw new Error('You must define one card, element, or row in the template');
     }
     const thingConfig = deepReplace(variables, templateConfig);
+    // If this template's own content is itself a nested decluttering-card
+    // reference, thread the chain through it - a nested reference mounts as
+    // a genuinely separate custom element with no other way to know which
+    // templates are already being instantiated above it.
+    threadChainIntoNestedReference(thingConfig, chain);
 
     this._thingConfig = thingConfig;
     this._thingType = thingType;
