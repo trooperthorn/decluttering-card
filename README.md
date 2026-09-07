@@ -226,6 +226,57 @@ row:
   name: '[[room_name|Unnamed Zone]]'
 ```
 
+### Stamping a template across many entities with `for_each`
+
+Instead of instantiating a template once with hand-picked variables, a
+`custom:decluttering-card` can select a whole set of entities from Home
+Assistant's own area/label/device registries and stamp the template once per
+match - the same job normally split across a `decluttering-card` plus a
+separate `auto-entities` card, folded into one.
+
+```yaml
+type: custom:decluttering-card
+template: safety_chip
+for_each:
+  area: kitchen
+  domain: binary_sensor
+  device_class: moisture
+```
+
+Every matched entity gets the template's `card`/`row`/`element` stamped with
+an automatically-built set of variables, so the template can reference
+`[[entity]]`, `[[name]]`, `[[area]]`, `[[floor]]`, `[[label]]`, and `[[domain]]`
+without you passing any of them by hand. A `variables:` list alongside
+`for_each` still works too - those apply identically to every match, on top
+of the automatic ones.
+
+**Selector fields** (all optional; each accepts a single value or a list -
+a list is OR'd, e.g. `area: [kitchen, garage]`; different fields are AND'd
+together):
+
+- `area`, `label`, `domain`, `device_class`, `floor` - matched against Home
+  Assistant's area/label/device/entity registries, not against entity id
+  text. `floor` only has any effect on a multi-floor home.
+- `exclude`: a `*` glob or a `/regex/` matched against the entity id, for the
+  entities a registry filter alone can't rule out.
+- `exclude_states`: a list of states to skip entirely, e.g. `[unavailable]`.
+  Nothing is excluded by state unless you list one.
+
+**Presentation fields:**
+
+- `sort_by`: `name`, `state`, or `area`.
+- `group_by`: `area` - adds a group header above each area's matches.
+- `layout`: `stack` (default) or `grid`; `columns` sets the grid's column
+  count (default 2).
+- `empty_message`: shown instead of an empty card when nothing matches.
+- `debug: true`: instead of rendering the real template, shows each matched
+  entity id and its resolved variables - useful for checking a selector
+  actually matches what you expect before wiring up the real template.
+
+Registry data is fetched once per dashboard page load and cached for the
+session (the same tradeoff `auto-entities` makes) - an entity moved to a
+different area won't be picked up by `for_each` until you reload.
+
 ### Using the card
 
 If your template content is a card, add a *Custom: Decluttering card* to your dashboard
