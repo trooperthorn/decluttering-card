@@ -7,6 +7,7 @@ import { getLovelaceConfig } from '../lovelace-lookup';
 import { getTemplateConfig, getThingType } from '../templates-registry';
 import { registerCustomCard } from '../register-custom-card';
 import { resolveForEach, ForEachMatch } from '../for-each';
+import { subscribeToRegistryChanges, getRegistryGeneration } from '../registry-lookup';
 import { createLovelaceThing } from '../thing-factory';
 import deepReplace from '../template-engine';
 import { assertNoRecursion, extractInheritedChain, threadChainIntoNestedReference } from '../template-chain';
@@ -46,6 +47,13 @@ export class DeclutteringCard extends DeclutteringElement {
   // Guards against a stale async resolution (from a superseded setConfig or
   // hass update) clobbering a newer one that finished first.
   private _forEachResolveToken = 0;
+
+  // The registry generation this card last resolved against (see
+  // registry-lookup.ts's subscribeToRegistryChanges). Comparing against the
+  // live generation on every hass update is what lets this card notice a
+  // registry change and re-resolve without anyone reloading the page - a
+  // requirement on an always-on kiosk display, not just a nice-to-have.
+  private _forEachResolvedGeneration = -1;
 
   static get styles(): CSSResult {
     return css`
@@ -135,8 +143,13 @@ export class DeclutteringCard extends DeclutteringElement {
   set hass(hass: HomeAssistant) {
     super.hass = hass;
 
-    if (this._forEachConfig && !this._forEachGroups && !this._forEachDebugRows) {
-      this._resolveForEach(this._forEachConfig, hass);
+    if (this._forEachConfig) {
+      subscribeToRegistryChanges(hass);
+      const staleResult = !this._forEachGroups && !this._forEachDebugRows;
+      const staleRegistry = this._forEachResolvedGeneration !== getRegistryGeneration();
+      if (staleResult || staleRegistry) {
+        this._resolveForEach(this._forEachConfig, hass);
+      }
     }
     this._forEachGroups?.forEach((group) => {
       group.items.forEach((item) => {
@@ -149,6 +162,11 @@ export class DeclutteringCard extends DeclutteringElement {
     const forEachConfig = config.for_each;
     if (!forEachConfig) return;
     const token = ++this._forEachResolveToken;
+    // Captured now, not after resolving: if a registry event lands while
+    // this resolution is still in flight, this snapshot is already stale
+    // against the new generation, so the next hass update re-resolves again
+    // instead of the change being missed.
+    this._forEachResolvedGeneration = getRegistryGeneration();
 
     const ll = getLovelaceConfig();
     if (!ll) {
