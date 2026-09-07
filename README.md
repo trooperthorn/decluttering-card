@@ -211,6 +211,21 @@ default:
   how: 'Boop'
 ```
 
+You can also give a variable an inline fallback right in the token itself, with
+`[[variable_name|fallback text]]` - if nothing supplies that variable (no
+`variables:` entry on the card, no `default` entry on the template), the
+fallback text is used instead of leaving a broken `[[...]]` token behind. A
+real supplied variable (from either `variables:` or `default`) always takes
+priority over the inline fallback. The fallback is always plain text, even for
+a field that's normally a number or boolean - inline fallbacks don't carry
+type information the way a real variable value does.
+
+```yaml
+row:
+  type: button
+  name: '[[room_name|Unnamed Zone]]'
+```
+
 ### Using the card
 
 If your template content is a card, add a *Custom: Decluttering card* to your dashboard
