@@ -1,0 +1,63 @@
+name: Visual regression
+
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: 'Regenerate baseline screenshots and commit them (run this once to seed baselines, and again whenever a change legitimately alters the debug/empty views)'
+        type: boolean
+        default: false
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright's browser
+        run: npx playwright install --with-deps chromium
+      - name: Build
+        run: npm run rollup
+
+      - name: Update baseline screenshots
+        if: github.event_name == 'workflow_dispatch' && inputs.update_snapshots
+        run: npm run test:visual:update
+
+      - name: Commit updated baselines
+        if: github.event_name == 'workflow_dispatch' && inputs.update_snapshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add e2e/__screenshots__
+          git diff --cached --quiet && echo "No screenshot changes to commit." || git commit -m "chore: update visual regression baselines"
+          git push origin HEAD:${{ github.ref_name }}
+
+      # Not run as part of the update pass above (there's nothing to compare
+      # a freshly-generated baseline against). Runs otherwise, comparing
+      # against the baselines committed in e2e/__screenshots__ - seeded
+      # 2026-09-07 and confirmed passing for real (not just continue-on-error
+      # masking a failure) before this became a blocking gate.
+      - name: Compare against baseline screenshots
+        if: "!(github.event_name == 'workflow_dispatch' && inputs.update_snapshots)"
+        run: npm run test:visual
+      - name: Upload diff report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
