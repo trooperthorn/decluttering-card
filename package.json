@@ -7,7 +7,7 @@
     "build": "npm run lint && npm run rollup",
     "rollup": "rollup -c",
     "babel": "babel dist/decluttering-card.js --out-file dist/decluttering-card.js",
-    "lint": "eslint src/*.ts",
+    "lint": "eslint \"src/**/*.ts\"",
     "test": "vitest run",
     "postversion": "npm run build",
     "start": "rollup -c --watch"
