@@ -82,11 +82,20 @@ repo's status against it honestly - including where it's short.
   `area_registry_updated` already fires when an area's `floor_id` changes.
 - **The `getLovelaceConfig()` DOM-walk** (needed to look up a
   `decluttering-card`'s referenced template from the live Lovelace config)
-  reaches into Home Assistant's internal shadow DOM structure via
-  `custom-card-helpers`' own published implementation. There is no public,
-  officially supported API for a third-party card to do this any other way;
-  this fails loudly (a console error) rather than silently if a future HA
-  frontend restructuring breaks it.
+  reaches into Home Assistant's internal shadow DOM structure. There is no
+  public, officially supported API for a third-party card to do this any
+  other way; this fails loudly (a console error) rather than silently if a
+  future HA frontend restructuring breaks it - which is exactly what
+  happened live on HA 2026.9.1: `custom-card-helpers@1.5.0`'s own
+  `getLovelace()` still hardcoded `app-drawer-layout partial-panel-resolver`,
+  but that element had already been replaced with `ha-drawer`. Every card on
+  every dashboard failed with "could not locate the Lovelace configuration".
+  Fixed by owning this walk directly in `lovelace-lookup.ts` again (checking
+  `ha-drawer`, then falling back to `app-drawer-layout`, then a bare
+  `partial-panel-resolver`) instead of trusting an unmaintained dependency to
+  track HA's internals - the coupling to an undocumented HA internal is
+  unavoidable either way, but at least this way a fix doesn't wait on a third
+  party.
 - **Nested `custom:decluttering-card` references** are guarded against
   infinite self-reference recursion, but a very large or deep composition
   (many `for_each` matches each nesting further templates) has not been

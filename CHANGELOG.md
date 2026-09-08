@@ -9,6 +9,19 @@ repos use. See `docs/quality-scale.md` for the full detail.
 
 ## Unreleased
 
+### Fixed
+
+- `getLovelaceConfig()` failed on live HA 2026.9.1 with "could not locate the
+  Lovelace configuration" on every card, every dashboard: the imported
+  `custom-card-helpers@1.5.0` implementation still hardcoded
+  `app-drawer-layout partial-panel-resolver`, but HA's frontend had already
+  replaced that wrapper element with `ha-drawer`. The DOM-walk is owned
+  directly again (`ha-drawer`, falling back to `app-drawer-layout`, falling
+  back to a bare `partial-panel-resolver`) instead of depending on an
+  unmaintained package to track HA's internals. See `docs/quality-scale.md`.
+
+## 2026.09.07.1
+
 ### Added
 
 - `for_each`: stamp a template once per entity matching an `area`/`label`/
