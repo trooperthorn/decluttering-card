@@ -42,7 +42,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json
-          git commit -m "chore(release): v${{ steps.version.outputs.version }}"
+          # package.json may already read as today's next version (e.g. a
+          # manual local bump ahead of the first release run for the day) -
+          # nothing to commit is not a failure, the tag/release step below
+          # still needs to run.
+          git diff --staged --quiet && echo "package.json already at v${{ steps.version.outputs.version }}, nothing to commit" || git commit -m "chore(release): v${{ steps.version.outputs.version }}"
           git push origin HEAD:master
 
       - name: Tag and create the release
