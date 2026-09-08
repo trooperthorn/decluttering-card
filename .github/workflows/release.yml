@@ -24,10 +24,6 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Build and test
-        run: |
-          npm run build
-          npm test
 
       - name: Compute and apply the next CalVer version
         id: version
@@ -35,6 +31,17 @@ jobs:
           set -euo pipefail
           VERSION="$(python3 -m scripts.set_version --next-from-tags)"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build and test
+        # Must run after the version bump above: this card's own version
+        # banner is baked in from package.json at build time (`import * as
+        # pjson from '../package.json'`), so building first would ship a
+        # bundle whose embedded version string lags the tag it's attached to
+        # (found 2026-09-07: v2026.09.07.2's release asset still reported
+        # itself as 2026.09.07.1).
+        run: |
+          npm run build
+          npm test
 
       - name: Commit the version bump
         run: |
