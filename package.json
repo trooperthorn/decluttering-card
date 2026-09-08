@@ -1,6 +1,6 @@
 {
   "name": "decluttering-card",
-  "version": "1.0.5",
+  "version": "2026.09.07.1",
   "description": "Decluttering Card for Lovelace",
   "main": "dist/decluttering-card.js",
   "scripts": {
@@ -11,12 +11,11 @@
     "test": "vitest run",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
-    "postversion": "npm run build",
     "start": "rollup -c --watch"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/custom-cards/decluttering-card.git"
+    "url": "git+https://github.com/trooperthorn/decluttering-card.git"
   },
   "keywords": [
     "lovelace"
@@ -24,9 +23,9 @@
   "author": "RomRider",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/custom-cards/decluttering-card/issues"
+    "url": "https://github.com/trooperthorn/decluttering-card/issues"
   },
-  "homepage": "https://github.com/custom-cards/decluttering-card/README.md",
+  "homepage": "https://github.com/trooperthorn/decluttering-card#readme",
   "devDependencies": {
     "@babel/core": "^7.21.4",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
@@ -38,16 +37,9 @@
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^9.0.2",
-    "@semantic-release/exec": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/npm": "^10.0.2",
-    "@semantic-release/release-notes-generator": "^10.0.3",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "babel-cli": "^6.26.0",
-    "conventional-changelog-conventionalcommits": "^5.0.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.20.1",

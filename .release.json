@@ -1,0 +1,7 @@
+{
+  "tag_prefix": "v",
+  "timezone": "America/Chicago",
+  "version_fields": [
+    {"path": "package.json", "kind": "json", "key": "version"}
+  ]
+}
