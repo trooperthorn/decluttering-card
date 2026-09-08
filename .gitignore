@@ -4,3 +4,4 @@ yarn.lock
 /dist/**
 /playwright-report/
 /test-results/
+__pycache__/

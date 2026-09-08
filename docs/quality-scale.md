@@ -22,16 +22,24 @@ repo's status against it honestly - including where it's short.
       `for_each` selector matching, recursion guard, registry-change
       subscription)
 - [x] CI runs tests, not just lint/build
-- [x] CHANGELOG maintained (semantic-release, auto-generated from
-      conventional commits)
+- [x] CHANGELOG maintained (hand-maintained since the switch off
+      `semantic-release` to CalVer - see the Gold section)
 - [x] Issue templates for bug reports and feature requests (inherited from
       upstream, still accurate)
 
 ## Gold
 
-- [x] Tagged, versioned GitHub Releases via `semantic-release`
-      (`workflow_dispatch`-triggered, publishes to GitHub Releases with the
-      built bundle attached)
+- [x] Tagged, versioned GitHub Releases, `workflow_dispatch`-triggered,
+      publishing the built bundle as a release asset (`dist/` is gitignored,
+      so the asset is the only way the built JS reaches HACS). CalVer
+      (`YYYY.MM.DD.N`), matching Sean's other HA repos - `.release.json` +
+      `scripts/set_version.py`/`release_config.py`, copied as-is from
+      `ha_int_monoprice_6chan` (they're already generic; they just read/write
+      a JSON version field, no HA-specific assumptions). This replaced an
+      inherited `semantic-release` setup that turned out to be silently
+      broken: `package.json`'s `repository.url` still pointed at the
+      upstream repo it was forked from, so semantic-release compared against
+      the wrong remote and refused to publish anything at all, every time.
 - [x] Live-update behavior considered for the intended deployment context
       (always-on kiosk displays): `for_each`'s registry data refreshes on
       HA's own registry-change events rather than requiring a page reload

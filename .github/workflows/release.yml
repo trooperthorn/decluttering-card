@@ -1,18 +1,22 @@
 name: Release
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
 
 jobs:
-  release-bundle:
+  release:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev'
-
-    outputs:
-      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
-      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
-
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
@@ -20,7 +24,38 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Release
-        run: npx semantic-release
+      - name: Build and test
+        run: |
+          npm run build
+          npm test
+
+      - name: Compute and apply the next CalVer version
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION="$(python3 -m scripts.set_version --next-from-tags)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit the version bump
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore(release): v${{ steps.version.outputs.version }}"
+          git push origin HEAD:master
+
+      - name: Tag and create the release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          git tag "$TAG"
+          git push origin "$TAG"
+          # dist/ isn't committed (it's gitignored, built fresh here) - HACS
+          # installs this card as a release asset, not from the tagged tree,
+          # so the built bundle has to be attached here or there is nothing
+          # for HACS to fetch at all.
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "$TAG" --generate-notes dist/decluttering-card.js
