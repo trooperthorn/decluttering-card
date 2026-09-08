@@ -9,6 +9,21 @@ repos use. See `docs/quality-scale.md` for the full detail.
 
 ## Unreleased
 
+### Changed
+
+- Removed the inherited Babel build toolchain entirely (`@babel/core`, the
+  unused `@babel/plugin-proposal-class-properties`/`-decorators` pair,
+  `@rollup/plugin-babel`, and the ancient standalone `babel-cli`). It turned
+  out to be pure dead weight: `@babel/preset-env` was never installed, and
+  `@rollup/plugin-babel`'s file-extension filter never matched this
+  pipeline's `.ts`-tagged modules, so it had been silently transforming
+  nothing. Confirmed via a byte-for-byte identical `dist/decluttering-card.js`
+  before/after removal. Dropped 1,042 packages from `node_modules`. Also
+  bumped `@rollup/plugin-terser` to 1.0.0, closing its `serialize-javascript`
+  advisories.
+
+## 2026.09.07.2
+
 ### Fixed
 
 - `getLovelaceConfig()` failed on live HA 2026.9.1 with "could not locate the

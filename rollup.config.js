@@ -1,7 +1,6 @@
 import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
 import nodeResolve from '@rollup/plugin-node-resolve';
-import babel from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
 import serve from 'rollup-plugin-serve';
 import json from '@rollup/plugin-json';
@@ -26,18 +25,6 @@ const plugins = [
   // the bundler needs actual emitted JS, so override it here rather than in tsconfig.
   typescript({ noEmit: false, declaration: false }),
   json(),
-  babel({
-    exclude: 'node_modules/**',
-    babelHelpers: 'bundled',
-    babelrc: false,
-    presets: [
-      '@babel/preset-env',
-      {
-        useBuiltIns: 'entry',
-        targets: '> 0.25%, not dead',
-      },
-    ],
-  }),
   dev && serve(serveopts),
   !dev &&
     terser({

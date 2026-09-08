@@ -45,12 +45,22 @@ repo's status against it honestly - including where it's short.
       HA's own registry-change events rather than requiring a page reload
 - [x] Known limitations documented rather than silently assumed away (see
       below)
-- [ ] Dependency vulnerabilities from `npm audit` are mostly in the aging
-      Babel-based build toolchain (a legacy of the original upstream
-      project), not runtime code shipped to the browser - acceptable, but
-      not fully clean; a bigger toolchain modernization (dropping Babel
-      entirely now that the Lit 3 / modern-browser baseline may not need
-      its polyfills) would close this but wasn't in scope for this pass
+- [x] Dependency vulnerabilities from `npm audit`, mostly closed. The
+      inherited Babel toolchain (`@babel/core`, the unused
+      `@babel/plugin-proposal-*` pair, `@rollup/plugin-babel`, and the
+      ancient standalone `babel-cli`) is gone entirely - confirmed it was
+      pure dead weight first: `@babel/preset-env` was never even installed,
+      and `@rollup/plugin-babel`'s default file-extension filter doesn't
+      match the `.ts`-tagged modules this pipeline feeds it, so it had been
+      silently transforming nothing. Removing it dropped 1,042 packages from
+      `node_modules` and produced a byte-for-byte identical `dist/decluttering-card.js`
+      (verified by md5sum before/after), confirming zero functional change.
+      Also bumped `@rollup/plugin-terser` to 1.0.0, closing its
+      `serialize-javascript` RCE/DoS advisories. What's left: `esbuild`
+      (via `vite`/`vitest`) - fixing it means bumping to `vitest@5`, which
+      requires Node >=22.12 and would drop the CI matrix's Node 20.x leg;
+      left as a deliberate follow-up since that's a support-floor decision,
+      not a toolchain cleanup.
 
 ## Platinum (aspirational, not required)
 
