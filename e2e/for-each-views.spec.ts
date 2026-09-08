@@ -25,8 +25,8 @@ test('for_each debug view renders each match with its resolved variables', async
     const el = document.querySelector('decluttering-card') as any;
     el._forEachConfig = { type: 'custom:decluttering-card', template: 'x', for_each: { debug: true } };
     el._forEachDebugRows = [
-      { entityId: 'binary_sensor.kitchen_leak', variables: { entity: 'binary_sensor.kitchen_leak', name: 'Kitchen Leak', area: 'Kitchen', domain: 'binary_sensor' } },
-      { entityId: 'binary_sensor.garage_leak', variables: { entity: 'binary_sensor.garage_leak', name: 'Garage Leak', area: 'Garage', domain: 'binary_sensor' } },
+      { key: 'binary_sensor.kitchen_leak', variables: { entity: 'binary_sensor.kitchen_leak', name: 'Kitchen Leak', area: 'Kitchen', domain: 'binary_sensor' } },
+      { key: 'binary_sensor.garage_leak', variables: { entity: 'binary_sensor.garage_leak', name: 'Garage Leak', area: 'Garage', domain: 'binary_sensor' } },
     ];
     el.requestUpdate();
   });

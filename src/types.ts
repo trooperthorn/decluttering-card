@@ -5,6 +5,26 @@ export interface DeclutteringCardConfig extends LovelaceCardConfig {
   variables?: VariablesConfig[];
   template: string;
   for_each?: ForEachConfig;
+  repeat?: RepeatConfig;
+}
+
+// `repeat` is for_each's registry-free sibling: stamp the template once per
+// item in a literal, hand-authored list instead of once per registry match.
+// For the case for_each can't help with at all - the same single entity
+// (e.g. one remote) invoked repeatedly with different literal parameters
+// (a different `command` each time) rather than a different entity each
+// time, which isn't a selection problem for_each's area/label/domain
+// matching has any way to express.
+export interface RepeatConfig {
+  /** Each item is a plain flat map of variable name to value, merged the same way for_each's auto-bound variables are - a real supplied `variables:` entry for the same key still overrides it. */
+  items: Record<string, unknown>[];
+  layout?: 'stack' | 'grid';
+  /** Only used when layout is "grid". Defaults to 2. */
+  columns?: number;
+  /** Shown instead of an empty card when `items` is empty. */
+  empty_message?: string;
+  /** Renders each item's resolved variables instead of the real card, for authoring against a long items list. */
+  debug?: boolean;
 }
 
 // Selector fields are ANDed together (area + domain means "this area AND this
