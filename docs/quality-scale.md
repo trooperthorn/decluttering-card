@@ -66,11 +66,19 @@ repo's status against it honestly - including where it's short.
       in has no network access to Playwright's browser CDN, but
       `npx playwright test --list` confirmed the config and test file were
       syntactically valid before the first CI run proved the rest).
-- [ ] Live-verified against a real HA instance, not just unit-tested (the
-      registry entry field names `for_each` depends on - `entity_id`,
-      `device_id`, `area_id`, `labels`, `floor_id` - are long-stable HA
-      conventions but have not been checked against a live `callWS`
-      response)
+- [x] Live-verified against a real HA instance, not just unit-tested.
+      Deployed 2026-09-07/08 to a real HA 2026.9.1 instance (El Rancho
+      Assist): `for_each` (`area: kitchen, domain: light`/`cover`) correctly
+      resolved and rendered the live registry's actual entities (confirmed
+      by screenshot - "Kitchen Overhead Lights", "Kitchen Island Lights",
+      five separately-named shades - none of which are hand-authored
+      anywhere in the dashboard source, so this is real registry data
+      flowing through, not a coincidence), and `repeat` correctly rendered
+      an entire D-pad remote-control grid (12+ distinct buttons) from a
+      single templated block. This is the deploy that also caught and fixed
+      the `getLovelaceConfig()` / `ha-drawer` bug above - so "live-verified"
+      here includes having found a real bug this way, not just a clean
+      pass.
 
 ## Known limitations (Gold requires documenting these, not hiding them)
 
