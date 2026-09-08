@@ -283,6 +283,45 @@ page - built for always-on displays that may not be reloaded for weeks at a
 time. (There's no `floor_registry_updated` event; a floor's contents change
 via `area_registry_updated` instead, which is already covered.)
 
+### Stamping a template across a literal list with `repeat`
+
+`for_each` selects *different entities* from the registry - it has no way to
+help when there's only **one** entity involved and what actually repeats is a
+literal parameter, not the entity itself. The clearest example is a remote
+control: the same `remote.*` entity, invoked over and over with a different
+`command` each time.
+
+```yaml
+type: custom:decluttering-card
+template: remote_cmd
+variables:
+  - remote_id: remote.rx_a3080_main_remote
+repeat:
+  items:
+    - command: 'on'
+      name: 'ON'
+    - command: standby
+      name: STANDBY
+    - command: scene_1
+      name: 'SCENE 1'
+    - command: up
+      icon: mdi:arrow-up-bold
+      show_icon: true
+```
+
+Each item in `repeat.items` is a plain map of variable name to value - far
+simpler than `for_each`, since there's no registry lookup involved at all,
+just your own list, stamped once per item in the order you wrote it. A
+`variables:` list alongside `repeat` still applies identically to every item,
+same as with `for_each`.
+
+`repeat` supports the same presentation options as `for_each` - `layout`
+(`stack` or `grid`, with `columns`), `empty_message` for an empty `items`
+list, and `debug: true` to see each item's resolved variables instead of the
+real template while you're authoring a long list. It does not support
+`sort_by` or `group_by` - your list's order already is the order, nothing to
+sort. A card can use `for_each` or `repeat`, never both.
+
 ### Composing templates: one template referencing another
 
 A template's `card`/`row`/`element` content can itself contain a
